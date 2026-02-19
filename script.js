@@ -391,7 +391,7 @@ function initDefaultDate(){
   if(!baseHour.value) baseHour.value = now.getHours();
   if(!baseMinute.value) baseMinute.value = now.getMinutes();
 }
-
+ 
 
 loadBase();
 initDefaultDate();
