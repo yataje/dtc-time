@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>DTC-TIME</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+<div class="base-title">동기화 기준</div>
+
+  <!-- A열 : 절대 기준 -->
+  <section class="base-section">
+
+  <div class="base-input-group">
+    
+    <input type="number" id="baseYear">
+    <label>연  </label>
+
+    
+    <input type="number" id="baseMonth">
+    <label>월  </label>
+
+    
+    <input type="number" id="baseDay">
+    <label>일  </label>
+    
+
+    <input type="number" id="baseHour">
+    <label>시  </label>
+
+
+    <input type="number" id="baseMinute">
+    <label>분  </label>
+
+
+    <select id="baseEpisodeSelect"></select>
+    <label>에피소드</label>
+  </div>
+
+</section>
+
+
+  <!-- B열 : 오늘 -->
+  <section class="today-section">
+    오늘 기준 (자동 동기화)
+  </section>
+
+  <!-- C열 -->
+  <section class="episode-section">
+
+  <div class="season-column">
+    <div class="season-title">시즌1</div>
+    <div class="season-buttons" id="season1"></div>
+  </div>
+
+  <div class="season-column">
+    <div class="season-title">시즌2</div>
+    <div class="season-buttons" id="season2"></div>
+  </div>
+
+  <div class="season-column">
+    <div class="season-title">시즌3</div>
+    <div class="season-buttons" id="season3"></div>
+  </div>
+
+  <div class="season-column">
+    <div class="season-title">시즌4</div>
+    <div class="season-buttons" id="season4"></div>
+  </div>
+
+</section>
+
+
+  <!-- D열 -->
+  <section class="result-section">
+    <div id="resultArea"></div>
+  </section>
+
+  <!-- E열 -->
+ 
+<div class="control-row">
+
+  <select id="clockMode">
+    <option value="12">12시간제</option>
+    <option value="24">24시간제</option>
+  </select>
+
+  <select id="outputOrder">
+    <option value="time-title">시간-제목</option>
+    <option value="title-time">제목-시간</option>
+  </select>
+
+  <button id="copyBtn">복사</button>
+
+</div>
+
+
+
+
+
+
+</div>
+
+<section class="next-section">
+  <div id="nextBroadcast"></div>
+  <button id="copyNextBtn">다음 방송일 복사</button>
+</section>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+
+
+<script src="script.js"></script>
+</body>
+</html>
