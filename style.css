@@ -170,7 +170,7 @@ button {
   width: 80px;
 }
 
-
+ 
 /* ===== 선택박스 가독성 개선 ===== */
 
 #clockMode,
@@ -190,3 +190,9 @@ button {
 
 
 
+#buildVersion {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: center;
+}
