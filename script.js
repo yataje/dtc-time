@@ -1,3 +1,7 @@
+import { saveBaseCloud, loadBaseCloud } from "./firebase.js";
+
+
+
 // =====================
 // 에피소드 데이터
 // =====================
@@ -100,7 +104,8 @@ const outputOrder = document.getElementById("outputOrder");
 
 const STORAGE_KEY = "dtc_base_sync";
 
-function saveBase(){
+async function saveBase(){
+
   const data = {
     y: baseYear.value,
     m: baseMonth.value,
@@ -110,9 +115,26 @@ function saveBase(){
     ep: baseEpisodeSelect.value
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+ 
+  await saveBaseCloud(data);
+
 }
 
-function loadBase(){
+async function loadBase(){
+
+const cloud = await loadBaseCloud();
+
+if(cloud){
+  baseYear.value = cloud.y;
+  baseMonth.value = cloud.m;
+  baseDay.value = cloud.d;
+  baseHour.value = cloud.h;
+  baseMinute.value = cloud.min;
+  baseEpisodeSelect.value = cloud.ep;
+  return;
+}
+
+
   const saved = localStorage.getItem(STORAGE_KEY);
   if(!saved) return;
   const d = JSON.parse(saved);
@@ -135,7 +157,6 @@ seasonData.forEach((ep,i)=>{
   baseEpisodeSelect.appendChild(opt);
 });
 
-loadBase();
 
 // =====================
 // 시즌 버튼 생성
@@ -392,6 +413,15 @@ function initDefaultDate(){
   if(!baseMinute.value) baseMinute.value = now.getMinutes();
 }
  
-  
+ async function init(){
+
+  await loadBase();   // Firebase 먼저 로딩
+  initDefaultDate();
+
+}
+
+init();
+
+
 loadBase();
 initDefaultDate();
