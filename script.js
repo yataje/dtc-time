@@ -104,8 +104,12 @@ const outputOrder = document.getElementById("outputOrder");
 
 const STORAGE_KEY = "dtc_base_sync";
 
+
 async function saveBase(){
 
+  console.log("SAVE RUN");
+
+  
   const data = {
     y: baseYear.value,
     m: baseMonth.value,
@@ -116,7 +120,7 @@ async function saveBase(){
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
  
-//  await saveBaseCloud(data);
+ await saveBaseCloud(data);
 
 }
 
@@ -383,6 +387,8 @@ copyNextBtn.addEventListener("click", ()=>{
 let saveTimer;
 
 function refreshAll(){
+
+   saveBase();
 
   highlightUpcoming();
 
