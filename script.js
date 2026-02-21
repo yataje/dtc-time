@@ -400,7 +400,7 @@ while(true){
     if(btn) btn.classList.add("upcoming");
   }
 }
-
+ 
 // =====================
 // 복사
 // =====================
