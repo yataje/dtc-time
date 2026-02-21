@@ -94,8 +94,21 @@ const copyNextBtn = document.getElementById("copyNextBtn");
 
 const clockMode = document.getElementById("clockMode");
 const outputOrder = document.getElementById("outputOrder");
+const btnMap={};
 
 
+function getBaseDate(){
+  return new Date(
+    Number(baseYear.value),
+    Number(baseMonth.value) - 1,
+    Number(baseDay.value),
+    Number(baseHour.value),
+    Number(baseMinute.value)
+  );
+}
+
+let saveTimer;
+let activeIndex = null;
 
 
 // =====================
@@ -104,12 +117,34 @@ const outputOrder = document.getElementById("outputOrder");
 
 const STORAGE_KEY = "dtc_base_sync";
 
+// UI 설정(12/24, 출력순서) 로컬 저장
+const UI_PREFS_KEY = "dtc_ui_prefs";
+
+function saveUiPrefs(){
+  const prefs = {
+    clockMode: clockMode.value,
+    outputOrder: outputOrder.value
+  };
+  localStorage.setItem(UI_PREFS_KEY, JSON.stringify(prefs));
+}
+
+function loadUiPrefs(){
+  const raw = localStorage.getItem(UI_PREFS_KEY);
+  if(!raw) return;
+
+  try{
+    const prefs = JSON.parse(raw);
+    if(prefs.clockMode) clockMode.value = prefs.clockMode;
+    if(prefs.outputOrder) outputOrder.value = prefs.outputOrder;
+  }catch(e){
+    // 깨진 값이면 무시
+  }
+}
+
 
 async function saveBase(){
 
-  console.log("SAVE RUN");
-
-  
+    
   const data = {
     y: baseYear.value,
     m: baseMonth.value,
@@ -192,16 +227,20 @@ seasonData.forEach((ep,i)=>{
   const btn = document.createElement("button");
   btn.textContent = ep.title;
   btn.dataset.index = i;
+  btnMap[i] = btn;
+
+
 
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".season-buttons button")
       .forEach(b=>b.classList.remove("active"));
 
     btn.classList.add("active");
+    activeIndex = i;
 
-    generateSchedule(i);
-    highlightUpcoming();
-    showNextBroadcast(i);
+    
+   refreshAll();
+
   });
 
   const seasonNumber = Math.floor(i/7)+1;
@@ -214,13 +253,10 @@ seasonData.forEach((ep,i)=>{
 
 function generateSchedule(targetIndex){
 
-  const baseDate = new Date(
-    baseYear.value,
-    baseMonth.value-1,
-    baseDay.value,
-    baseHour.value,
-    baseMinute.value
-  );
+ 
+  const baseDate = getBaseDate();
+
+
 
   const baseIndex = parseInt(baseEpisodeSelect.value);
   if(isNaN(baseIndex)) return;
@@ -258,7 +294,7 @@ if(outputOrder.value === "title-time"){
 
 
 
-    if(i<5) output+="/";
+    if(i<5) output+=" / ";
   }
 
   resultArea.textContent = output;
@@ -270,16 +306,16 @@ if(outputOrder.value === "title-time"){
 
 function showNextBroadcast(targetIndex){
 
-  const baseDate = new Date(
-    baseYear.value,
-    baseMonth.value-1,
-    baseDay.value,
-    baseHour.value,
-    baseMinute.value
-  );
+  const baseDate = getBaseDate();
+  if (isNaN(baseDate.getTime())) return;
 
   const baseIndex = parseInt(baseEpisodeSelect.value);
+  if (isNaN(baseIndex)) return;
+
   const now = new Date();
+
+
+
 
   let currentTime = new Date(baseDate);
   let index = baseIndex;
@@ -296,39 +332,40 @@ function showNextBroadcast(targetIndex){
     index = (index+1) % seasonData.length;
   }
 
-  const m = currentTime.getMonth()+1;
+  const m = currentTime.getMonth() + 1;
   const d = currentTime.getDate();
-  const h = currentTime.getHours();
-  const min = currentTime.getMinutes();
   const dayName = weekDays[currentTime.getDay()];
   const title = seasonData[targetIndex].title;
 
-  const text = `${title} ${m}월 ${d}일 (${dayName}) ${h}시 ${min}분`;
+  // clockMode 반영 (12/24)
+  const [hh, mm] = formatClock(currentTime).split(":");
 
-
+  const text = `${title} ${m}월 ${d}일 (${dayName}) ${hh}시 ${mm}분`;
   document.getElementById("nextBroadcast").textContent = text;
 }
+
+
+
+
 
 // =====================
 // 하이라이트
 // =====================
 
-function highlightUpcoming(){
+  function highlightUpcoming(){
+
+  const baseDate = getBaseDate();
+  if (isNaN(baseDate.getTime())) return;
+
+  const baseIndex = parseInt(baseEpisodeSelect.value);
+  if (isNaN(baseIndex)) return;
+
+  const now = new Date();
 
   document.querySelectorAll(".season-buttons button")
     .forEach(b=>b.classList.remove("upcoming"));
 
-  const baseDate = new Date(
-    baseYear.value,
-    baseMonth.value-1,
-    baseDay.value,
-    baseHour.value,
-    baseMinute.value
-  );
-
-  const now = new Date();
-  const baseIndex = parseInt(baseEpisodeSelect.value);
-
+  
   let currentTime = new Date(baseDate);
   let index = baseIndex;
 
@@ -359,7 +396,7 @@ while(true){
 
   for(let i=0;i<6;i++){
     const target = (index+i) % seasonData.length;
-    const btn = document.querySelector(`.season-buttons button[data-index="${target}"]`);
+    const btn = btnMap[target];
     if(btn) btn.classList.add("upcoming");
   }
 }
@@ -367,6 +404,18 @@ while(true){
 // =====================
 // 복사
 // =====================
+
+clockMode.addEventListener("change", () => {
+  saveUiPrefs();
+  refreshAll();
+});
+
+outputOrder.addEventListener("change", () => {
+  saveUiPrefs();
+  refreshAll();
+});
+
+
 
 copyBtn.addEventListener("click", ()=>{
   navigator.clipboard.writeText(resultArea.textContent);
@@ -384,22 +433,19 @@ copyNextBtn.addEventListener("click", ()=>{
 // 이벤트
 // =====================
 
-let saveTimer;
+
 
 function refreshAll(){
-
-   saveBase();
-
   highlightUpcoming();
 
-  const activeBtn = document.querySelector(".season-buttons button.active");
+  if(activeIndex === null) return;
 
-  if(activeBtn){
-    const index = parseInt(activeBtn.dataset.index);
-    generateSchedule(index);
-    showNextBroadcast(index);
-  }
+  generateSchedule(activeIndex);
+  showNextBroadcast(activeIndex);
 }
+
+
+
 
 [
   baseYear, baseMonth, baseDay,
@@ -417,30 +463,29 @@ function refreshAll(){
 
   });
 
-  el.addEventListener("change", refreshAll); // ⭐ 이것만 추가
+  // change는 입력 확정이니 즉시 저장 1회
+  el.addEventListener("change", () => {
+    refreshAll();
+    clearTimeout(saveTimer);
+    saveBase();
+  });
 
 });
 
 
 
 
-highlightUpcoming();
-
 
 // 30분마다 업커밍 자동 갱신
+
+
+
 setInterval(() => {
-
   highlightUpcoming();
-
-  const activeBtn = document.querySelector(".season-buttons button.active");
-  if (activeBtn) {
-    const index = parseInt(activeBtn.dataset.index);
-    showNextBroadcast(index);
+  if(activeIndex !== null){
+    showNextBroadcast(activeIndex);
   }
-
-}, 1800000); // 30분 = 1,800,000ms
-
-
+}, 1800000);
 
 
 
@@ -448,12 +493,16 @@ setInterval(() => {
 
 async function init(){
 
-  await loadBase();   // Firebase 먼저 로딩
+  await loadBase();
   initDefaultDate();
+  loadUiPrefs();
+  activeIndex = parseInt(baseEpisodeSelect.value);
+  if(isNaN(activeIndex)) activeIndex = 0;
 
-  refreshAll(); // ⭐ 추가
+  refreshAll();
 
 }
 
 init();
+
 
