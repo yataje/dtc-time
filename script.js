@@ -116,7 +116,7 @@ async function saveBase(){
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
  
-  await saveBaseCloud(data);
+//  await saveBaseCloud(data);
 
 }
 
@@ -219,6 +219,7 @@ function generateSchedule(targetIndex){
   );
 
   const baseIndex = parseInt(baseEpisodeSelect.value);
+  if(isNaN(baseIndex)) return;
 
   let currentTime = new Date(baseDate);
 
@@ -327,12 +328,30 @@ function highlightUpcoming(){
   let currentTime = new Date(baseDate);
   let index = baseIndex;
 
-  while(true){
-    const nextTime = new Date(currentTime.getTime() + durations[index]*1000);
-    if(now >= currentTime && now < nextTime) break;
-    currentTime = nextTime;
-    index = (index+1) % seasonData.length;
+  
+let safety = 0;
+
+while(true){
+
+  if(safety++ > 1000){
+    console.warn("highlightUpcoming safety break");
+    break;
   }
+
+  const nextTime = new Date(
+    currentTime.getTime() + durations[index]*1000
+  );
+
+  if(now < nextTime){
+  break;
+  }
+
+  currentTime = nextTime;
+  index = (index+1) % seasonData.length;
+}
+
+
+
 
   for(let i=0;i<6;i++){
     const target = (index+i) % seasonData.length;
@@ -354,13 +373,16 @@ copyNextBtn.addEventListener("click", ()=>{
   navigator.clipboard.writeText(text);
 });
 
+
+
+
 // =====================
 // 이벤트
 // =====================
 
-function refreshAll(){
+let saveTimer;
 
-  saveBase();
+function refreshAll(){
 
   highlightUpcoming();
 
@@ -377,9 +399,24 @@ function refreshAll(){
   baseYear, baseMonth, baseDay,
   baseHour, baseMinute, baseEpisodeSelect
 ].forEach(el=>{
-  el.addEventListener("input", refreshAll);
-  el.addEventListener("change", refreshAll);
+
+  el.addEventListener("input", () => {
+
+    refreshAll();
+
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      saveBase();
+    }, 500);
+
+  });
+
+  el.addEventListener("change", refreshAll); // ⭐ 이것만 추가
+
 });
+
+
+
 
 highlightUpcoming();
 
@@ -397,31 +434,20 @@ setInterval(() => {
 
 }, 1800000); // 30분 = 1,800,000ms
 
-clockMode.addEventListener("change", refreshAll);
-outputOrder.addEventListener("change", refreshAll);
 
 
-function initDefaultDate(){
 
-  const now = new Date();
 
-  if(!baseYear.value) baseYear.value = now.getFullYear();
-  if(!baseMonth.value) baseMonth.value = now.getMonth() + 1;
-  if(!baseDay.value) baseDay.value = now.getDate();
 
-  if(!baseHour.value) baseHour.value = now.getHours();
-  if(!baseMinute.value) baseMinute.value = now.getMinutes();
-}
- 
- async function init(){
+
+async function init(){
 
   await loadBase();   // Firebase 먼저 로딩
   initDefaultDate();
+
+  refreshAll(); // ⭐ 추가
 
 }
 
 init();
 
-
-loadBase();
-initDefaultDate();
