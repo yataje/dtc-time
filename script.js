@@ -314,6 +314,8 @@ function showNextBroadcast(targetIndex){
 
   const N = seasonData.length;
 
+  // 커밋용 낙서
+  
   // 1) targetIndex(버튼) 시작 시각 구하기: generateSchedule과 동일한 정렬 로직
   let currentTime = new Date(baseDate);
 
