@@ -312,33 +312,52 @@ function showNextBroadcast(targetIndex){
   const baseIndex = parseInt(baseEpisodeSelect.value);
   if (isNaN(baseIndex)) return;
 
-  const now = new Date();
+  const N = seasonData.length;
 
-
-
-
+  // 1) targetIndex(버튼) 시작 시각 구하기: generateSchedule과 동일한 정렬 로직
   let currentTime = new Date(baseDate);
-  let index = baseIndex;
 
-  while(true){
-    const nextTime = new Date(currentTime.getTime() + durations[index]*1000);
-    if(now < nextTime) break;
-    currentTime = nextTime;
-    index = (index+1) % seasonData.length;
+  if(targetIndex !== baseIndex){
+    let i = baseIndex;
+    while(i !== targetIndex){
+      currentTime = new Date(currentTime.getTime() + durations[i] * 1000);
+      i = (i + 1) % N;
+    }
   }
+let index = targetIndex;
 
-  while(index !== targetIndex){
-    currentTime = new Date(currentTime.getTime() + durations[index]*1000);
-    index = (index+1) % seasonData.length;
-  }
 
+  // 2) 화면에 출력되는 6회(약 12시간)만큼 진행한 뒤, 그 다음 회차의 시작 시각으로 이동
+  // 2) 화면에 출력되는 6회 진행
+for(let k = 0; k < 6; k++){
+  currentTime = new Date(
+    currentTime.getTime() + durations[index] * 1000
+  );
+  index = (index + 1) % N;
+}
+
+// 같은 에피소드가 다시 나올 때까지 진행
+while(index !== targetIndex){
+  currentTime = new Date(
+    currentTime.getTime() + durations[index] * 1000
+  );
+  index = (index + 1) % N;
+}
+
+
+
+
+  
+  const nextIndex = targetIndex;
+
+  // 3) nextBroadcast는 항상 24시간제 고정
   const m = currentTime.getMonth() + 1;
   const d = currentTime.getDate();
   const dayName = weekDays[currentTime.getDay()];
-  const title = seasonData[targetIndex].title;
+  const title = seasonData[nextIndex].title;
 
-  // clockMode 반영 (12/24)
-  const [hh, mm] = formatClock(currentTime).split(":");
+  const hh = String(currentTime.getHours()).padStart(2,'0');
+  const mm = String(currentTime.getMinutes()).padStart(2,'0');
 
   const text = `${title} ${m}월 ${d}일 (${dayName}) ${hh}시 ${mm}분`;
   document.getElementById("nextBroadcast").textContent = text;
