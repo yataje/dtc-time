@@ -253,23 +253,43 @@ seasonData.forEach((ep,i)=>{
 
 function generateSchedule(targetIndex){
 
- 
-  const baseDate = getBaseDate();
+ const baseDate = getBaseDate();
+const baseIndex = parseInt(baseEpisodeSelect.value);
+if(isNaN(baseIndex)) return;
 
+const now = new Date();
 
+let currentTime = new Date(baseDate);
+let index = baseIndex;
 
-  const baseIndex = parseInt(baseEpisodeSelect.value);
-  if(isNaN(baseIndex)) return;
+// ===== 현재 실제 방송 위치 찾기 =====
+let safety = 0;
+while(true){
+  if(safety++ > 1000) break;
 
-  let currentTime = new Date(baseDate);
+  const nextTime = new Date(
+    currentTime.getTime() + durations[index]*1000
+  );
 
-  if(targetIndex !== baseIndex){
-    let i = baseIndex;
-    while(i !== targetIndex){
-      currentTime = new Date(currentTime.getTime() + durations[i]*1000);
-      i = (i+1) % seasonData.length;
-    }
+  if(now < nextTime){
+    break;
   }
+
+  currentTime = nextTime;
+  index = (index + 1) % seasonData.length;
+}
+
+// ===== 현재 위치 → target 이동 =====
+while(index !== targetIndex){
+  currentTime = new Date(
+    currentTime.getTime() + durations[index]*1000
+  );
+  index = (index + 1) % seasonData.length;
+}
+  
+
+
+
 
   let output = "";
 
