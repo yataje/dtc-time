@@ -490,32 +490,6 @@ function refreshAll(){
 
 
 
-[
-  baseYear, baseMonth, baseDay,
-  baseHour, baseMinute, baseEpisodeSelect
-].forEach(el=>{
-
-  el.addEventListener("input", () => {
-
-    refreshAll();
-
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      saveBase();
-    }, 500);
-
-  });
-
-  // change는 입력 확정이니 즉시 저장 1회
-  el.addEventListener("change", () => {
-    refreshAll();
-    clearTimeout(saveTimer);
-    saveBase();
-  });
-
-});
-
-
 
 
 
@@ -549,3 +523,62 @@ async function init(){
 init();
 
 
+const editBtn = document.getElementById("editSyncBtn");
+const popup = document.getElementById("syncPopup");
+
+const popupYear = document.getElementById("popupYear");
+const popupMonth = document.getElementById("popupMonth");
+const popupDay = document.getElementById("popupDay");
+const popupHour = document.getElementById("popupHour");
+const popupMinute = document.getElementById("popupMinute");
+const popupEpisode = document.getElementById("popupEpisode");
+
+const cancelBtn = document.getElementById("popupCancel");
+const saveBtn = document.getElementById("popupSave");
+
+editBtn.addEventListener("click",()=>{
+
+  popupYear.value = baseYear.value;
+  popupMonth.value = baseMonth.value;
+  popupDay.value = baseDay.value;
+  popupHour.value = baseHour.value;
+  popupMinute.value = baseMinute.value;
+
+  popupEpisode.innerHTML = baseEpisodeSelect.innerHTML;
+  popupEpisode.value = baseEpisodeSelect.value;
+
+  popup.style.display = "flex";
+
+});
+
+cancelBtn.addEventListener("click",()=>{
+  popup.style.display="none";
+});
+
+saveBtn.addEventListener("click",()=>{
+
+  baseYear.value = popupYear.value;
+  baseMonth.value = popupMonth.value;
+  baseDay.value = popupDay.value;
+  baseHour.value = popupHour.value;
+  baseMinute.value = popupMinute.value;
+  baseEpisodeSelect.value = popupEpisode.value;
+
+  saveBase();
+  refreshAll();
+
+  popup.style.display="none";
+
+});
+
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    popup.style.display="none";
+  }
+});
+
+popup.addEventListener("click",(e)=>{
+  if(e.target === popup){
+    popup.style.display="none";
+  }
+});
