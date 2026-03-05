@@ -63,10 +63,11 @@ button.active {
 
 
 button.upcoming {
-  background-color: #2a3b55;   /* 부드러운 블루 계열 */
-  border-color: #3f5f8f;
-  color: #e6f0ff;
+  background-color: #273447;
+  border-color:#3f5f8f;
+  color:#e6f0ff;
 }
+
 
 
 .next-section {
@@ -88,10 +89,14 @@ button.upcoming {
 
 body {
   margin: 0;
-  background: #111;
-  color: #eee;
+  background: #161616;
+  color: #e6e6e6;
   font-family: sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
 
 input, select, button {
   font-size: 16px;
@@ -101,7 +106,17 @@ input, select, button {
 button {
   padding: 8px;
   border-radius: 6px;
+  background: #1f1f1f;
+  border: 1px solid #444;
+  color: #e6e6e6;
+  transition: all 0.15s ease;
 }
+
+button:hover{
+  background:#2a2a2a;
+}
+
+
 
 .base-input-group input {
   width: 80px;
@@ -265,4 +280,8 @@ button {
   display:flex;
   align-items:center;
   gap:6px;
+}
+
+html{
+  color-scheme: dark;
 }
