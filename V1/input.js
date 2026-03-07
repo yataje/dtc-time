@@ -22,6 +22,7 @@ async function load(){
 
 const cloud=await loadBaseCloud();
 
+
 if(!cloud) return;
 
 year.value=cloud.y;
