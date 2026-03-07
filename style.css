@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 .container {
   max-width: 900px;
@@ -168,3 +169,150 @@ transform:scale(0.96);
 border-color:#ff9800;
 color:#ff9800;
 }
+=======
+body {
+  font-family: sans-serif;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.base-section input {
+  width: 70px;
+  margin-right: 6px;
+}
+
+.episode-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button.active {
+  background: black;
+  color: white;
+}
+
+.result-section {
+  padding: 10px;
+  border: 1px solid #ccc;
+  min-height: 40px;
+}
+
+/* A열 회차 select 다크모드 개선 */
+
+.base-section select {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #555;
+  padding: 6px;
+}
+
+/* 드롭다운 옵션 */
+
+.base-section select option {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+
+.episode-section {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 10px;
+}
+
+.season-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.season-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.season-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+
+button.upcoming {
+  background-color: #2a3b55;   /* 부드러운 블루 계열 */
+  border-color: #3f5f8f;
+  color: #e6f0ff;
+}
+
+
+.next-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* 🔥 가로 가운데 */
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  text-align: center;    /* 텍스트 가운데 */
+}
+
+#nextBroadcast {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+
+
+body {
+  margin: 0;
+  background: #111;
+  color: #eee;
+  font-family: sans-serif;
+}
+
+input, select, button {
+  font-size: 16px;
+}
+
+.container {
+  padding: 16px;
+}
+
+button {
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.base-input-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.base-input-group label {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.base-input-group input {
+  width: 80px;
+}
+
+
+
+.base-input-group label {
+  margin-right: 8px;
+}
+
+
+
+
+
+>>>>>>> bf57d585c2a6bdef17535fa1ee9859f5706328c9
