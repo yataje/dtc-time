@@ -1,64 +1,88 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>DTC TIME</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>DTC-TIME</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <div class="container">
 
-<h2>대탈출 방송 시간표</h2>
+  <!-- B열 : 오늘 -->
 
-<section class="episode-section">
+   <div id="currentBroadcast"></div>
 
-<div class="season-column">
-<div class="season-title">시즌1</div>
-<div id="season1" class="season-buttons"></div>
-</div>
+  
+  <!-- C열 -->
+  <section class="episode-section">
 
-<div class="season-column">
-<div class="season-title">시즌2</div>
-<div id="season2" class="season-buttons"></div>
-</div>
+  <div class="season-column">
+    <div class="season-title">시즌1</div>
+    <div class="season-buttons" id="season1"></div>
+  </div>
 
-<div class="season-column">
-<div class="season-title">시즌3</div>
-<div id="season3" class="season-buttons"></div>
-</div>
+  <div class="season-column">
+    <div class="season-title">시즌2</div>
+    <div class="season-buttons" id="season2"></div>
+  </div>
 
-<div class="season-column">
-<div class="season-title">시즌4</div>
-<div id="season4" class="season-buttons"></div>
-</div>
+  <div class="season-column">
+    <div class="season-title">시즌3</div>
+    <div class="season-buttons" id="season3"></div>
+  </div>
 
-</section>
-
-<section class="result-section">
-
-<div id="resultArea"></div>
+  <div class="season-column">
+    <div class="season-title">시즌4</div>
+    <div class="season-buttons" id="season4"></div>
+  </div>
 
 </section>
 
+
+  <!-- D열 -->
+  <section class="result-section">
+    <div id="resultArea"></div>
+  </section>
+
+  <!-- E열 -->
+ 
 <div class="control-row">
 
-<button id="copyBtn">복사</button>
+  <select id="clockMode">
+    <option value="12">12시간제</option>
+    <option value="24">24시간제</option>
+  </select>
+
+  <select id="outputOrder">
+    <option value="time-title">시간-제목</option>
+    <option value="title-time">제목-시간</option>
+  </select>
+
+  <button id="copyBtn">복사</button>
 
 </div>
+
+
+
+
+
+
 
 </div>
 
 <section class="next-section">
-
-<div id="nextBroadcast"></div>
-
-<button id="copyNextBtn">다음 방송일 복사</button>
-
+  <div id="nextBroadcast"></div>
+  <button id="copyNextBtn">다음 방송일 복사</button>
 </section>
+
+
 
 <script type="module" src="script.js"></script>
 
+<div id="buildVersion">APPALAN DTC-TIME v2.0</div>
+
+
 </body>
 </html>
+

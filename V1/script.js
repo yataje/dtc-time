@@ -1,22 +1,36 @@
 import { loadBaseCloud } from "./firebase.js";
-import { episodes } from "./episodes.js";
 
 /* =====================
-에피소드 데이터
+채널/시간표 선택
 ===================== */
 
-const seasonData = episodes;
+const CHANNEL_KEY = "dtc_selected_channel";
+const channelRadios = document.querySelectorAll('input[name="channelType"]');
+let selectedChannel = localStorage.getItem(CHANNEL_KEY) || "chzzk";
+let seasonData = [];
+let durations = [];
+
+async function loadChannelData(channel){
+  const modulePath = channel === "youtube" ? "./youtube.js" : "./chzzk.js";
+  const mod = await import(modulePath);
+  seasonData = mod.episodes;
+  durations = seasonData.map(ep => toSeconds(ep.time));
+}
+
+function syncChannelUI(){
+  channelRadios.forEach(radio => {
+    radio.checked = radio.value === selectedChannel;
+  });
+}
 
 /* =====================
 유틸
 ===================== */
 
 function toSeconds(str){
-const [h,m,s]=str.split(":").map(Number);
-return h*3600+m*60+s;
+  const [h,m,s]=str.split(":").map(Number);
+  return h*3600+m*60+s;
 }
-
-const durations=seasonData.map(ep=>toSeconds(ep.time));
 
 const weekDays=["일","월","화","수","목","금","토"];
 
@@ -47,15 +61,13 @@ let activeIndex=null;
 ===================== */
 
 function getBaseDate(){
-
-return new Date(
-Number(baseData.y),
-Number(baseData.m)-1,
-Number(baseData.d),
-Number(baseData.h),
-Number(baseData.min)
-);
-
+  return new Date(
+    Number(baseData.y),
+    Number(baseData.m)-1,
+    Number(baseData.d),
+    Number(baseData.h),
+    Number(baseData.min)
+  );
 }
 
 /* =====================
@@ -63,68 +75,72 @@ Number(baseData.min)
 ===================== */
 
 function formatClock(date){
+  let h=date.getHours();
+  const m=date.getMinutes();
 
-let h=date.getHours();
-const m=date.getMinutes();
+  if(clockMode.value==="24"){
+    return `${h}:${String(m).padStart(2,"0")}`;
+  }
 
-if(clockMode.value==="24"){
-return `${h}:${String(m).padStart(2,"0")}`;
-}
+  h=h%12;
+  if(h===0)h=12;
 
-h=h%12;
-if(h===0)h=12;
-
-return `${h}:${String(m).padStart(2,"0")}`;
-
+  return `${h}:${String(m).padStart(2,"0")}`;
 }
 
 /* =====================
-시즌 버튼 생성
+시즌 버튼 렌더링
 ===================== */
 
 const seasonContainers={
-1:document.getElementById("season1"),
-2:document.getElementById("season2"),
-3:document.getElementById("season3"),
-4:document.getElementById("season4")
+  1:document.getElementById("season1"),
+  2:document.getElementById("season2"),
+  3:document.getElementById("season3"),
+  4:document.getElementById("season4")
 };
 
-seasonData.forEach((ep,i)=>{
+function clearSeasonButtons(){
+  for(const seasonNumber in seasonContainers){
+    seasonContainers[seasonNumber].innerHTML = "";
+  }
 
-const btn=document.createElement("button");
-btn.textContent=ep.title;
-btn.dataset.index=i;
+  for(const key in btnMap){
+    delete btnMap[key];
+  }
+}
 
-btnMap[i]=btn;
+function renderSeasonButtons(){
+  clearSeasonButtons();
 
-btn.addEventListener("click",()=>{
+  seasonData.forEach((ep,i)=>{
+    const btn=document.createElement("button");
+    btn.textContent=ep.title;
+    btn.dataset.index=i;
 
-clearActive();
+    btnMap[i]=btn;
 
-btn.classList.add("active");
+    btn.addEventListener("click",()=>{
+      clearActive();
+      btn.classList.add("active");
+      activeIndex=i;
+      refreshAll();
+    });
 
-activeIndex=i;
-
-refreshAll();
-
-});
-
-const seasonNumber=Math.floor(i/7)+1;
-
-seasonContainers[seasonNumber].appendChild(btn);
-
-});
+    const seasonNumber=Math.floor(i/7)+1;
+    if(seasonContainers[seasonNumber]){
+      seasonContainers[seasonNumber].appendChild(btn);
+    }
+  });
+}
 
 /* =====================
 active 초기화
 ===================== */
 
 function clearActive(){
-
-for(const key in btnMap){
-btnMap[key].classList.remove("active");
-}
-
+  for(const key in btnMap){
+    btnMap[key].classList.remove("active");
+  }
 }
 
 /* =====================
@@ -132,11 +148,9 @@ upcoming 초기화
 ===================== */
 
 function clearUpcoming(){
-
-for(const key in btnMap){
-btnMap[key].classList.remove("upcoming");
-}
-
+  for(const key in btnMap){
+    btnMap[key].classList.remove("upcoming");
+  }
 }
 
 /* =====================
@@ -144,30 +158,23 @@ btnMap[key].classList.remove("upcoming");
 ===================== */
 
 function getCurrentIndex(){
+  const baseDate=getBaseDate();
+  const baseIndex=parseInt(baseData.ep);
+  const now=new Date();
 
-const baseDate=getBaseDate();
-const baseIndex=parseInt(baseData.ep);
+  let currentTime=new Date(baseDate);
+  let index=baseIndex;
 
-const now=new Date();
+  while(true){
+    const nextTime=new Date(currentTime.getTime()+durations[index]*1000);
 
-let currentTime=new Date(baseDate);
-let index=baseIndex;
+    if(now<nextTime) break;
 
-while(true){
+    currentTime=nextTime;
+    index=(index+1)%seasonData.length;
+  }
 
-const nextTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
-
-if(now<nextTime) break;
-
-currentTime=nextTime;
-index=(index+1)%seasonData.length;
-
-}
-
-return index;
-
+  return index;
 }
 
 /* =====================
@@ -175,67 +182,51 @@ return index;
 ===================== */
 
 function generateSchedule(targetIndex){
+  const baseDate=getBaseDate();
+  const baseIndex=parseInt(baseData.ep);
+  const now=new Date();
 
-const baseDate=getBaseDate();
-const baseIndex=parseInt(baseData.ep);
+  let currentTime=new Date(baseDate);
+  let index=baseIndex;
 
-const now=new Date();
+  while(true){
+    const nextTime=new Date(currentTime.getTime()+durations[index]*1000);
 
-let currentTime=new Date(baseDate);
-let index=baseIndex;
+    if(now<nextTime)break;
 
-while(true){
+    currentTime=nextTime;
+    index=(index+1)%seasonData.length;
+  }
 
-const nextTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
+  while(index!==targetIndex){
+    currentTime=new Date(currentTime.getTime()+durations[index]*1000);
+    index=(index+1)%seasonData.length;
+  }
 
-if(now<nextTime)break;
+  let output="";
 
-currentTime=nextTime;
-index=(index+1)%seasonData.length;
+  for(let i=0;i<6;i++){
+    const idx=(targetIndex+i)%seasonData.length;
 
-}
+    if(i>0){
+      currentTime=new Date(
+        currentTime.getTime()+durations[(targetIndex+i-1)%seasonData.length]*1000
+      );
+    }
 
-while(index!==targetIndex){
+    const time=formatClock(currentTime);
+    const title=seasonData[idx].title;
 
-currentTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
+    if(outputOrder.value==="title-time"){
+      output+=`${title}-${time}`;
+    }else{
+      output+=`${time}-${title}`;
+    }
 
-index=(index+1)%seasonData.length;
+    if(i<5)output+=" / ";
+  }
 
-}
-
-let output="";
-
-for(let i=0;i<6;i++){
-
-const idx=(targetIndex+i)%seasonData.length;
-
-if(i>0){
-
-currentTime=new Date(
-currentTime.getTime()+durations[(targetIndex+i-1)%seasonData.length]*1000
-);
-
-}
-
-const time=formatClock(currentTime);
-const title=seasonData[idx].title;
-
-if(outputOrder.value==="title-time"){
-output+=`${title}-${time}`;
-}else{
-output+=`${time}-${title}`;
-}
-
-if(i<5)output+=" / ";
-
-}
-
-resultArea.textContent=output;
-
+  resultArea.textContent=output;
 }
 
 /* =====================
@@ -243,58 +234,41 @@ resultArea.textContent=output;
 ===================== */
 
 function showNextBroadcast(targetIndex){
+  const baseDate=getBaseDate();
+  const baseIndex=parseInt(baseData.ep);
+  const now=new Date();
 
-const baseDate=getBaseDate();
-const baseIndex=parseInt(baseData.ep);
+  let currentTime=new Date(baseDate);
+  let index=baseIndex;
 
-const now=new Date();
+  while(true){
+    const nextTime=new Date(currentTime.getTime()+durations[index]*1000);
 
-let currentTime=new Date(baseDate);
-let index=baseIndex;
+    if(now<nextTime)break;
 
-while(true){
+    currentTime=nextTime;
+    index=(index+1)%seasonData.length;
+  }
 
-const nextTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
+  for(let i=0;i<6;i++){
+    currentTime=new Date(currentTime.getTime()+durations[index]*1000);
+    index=(index+1)%seasonData.length;
+  }
 
-if(now<nextTime)break;
+  while(index!==targetIndex){
+    currentTime=new Date(currentTime.getTime()+durations[index]*1000);
+    index=(index+1)%seasonData.length;
+  }
 
-currentTime=nextTime;
-index=(index+1)%seasonData.length;
+  const m=currentTime.getMonth()+1;
+  const d=currentTime.getDate();
+  const dayName=weekDays[currentTime.getDay()];
 
-}
+  const hh=String(currentTime.getHours()).padStart(2,"0");
+  const mm=String(currentTime.getMinutes()).padStart(2,"0");
 
-for(let i=0;i<6;i++){
-
-currentTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
-
-index=(index+1)%seasonData.length;
-
-}
-
-while(index!==targetIndex){
-
-currentTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
-
-index=(index+1)%seasonData.length;
-
-}
-
-const m=currentTime.getMonth()+1;
-const d=currentTime.getDate();
-const dayName=weekDays[currentTime.getDay()];
-
-const hh=String(currentTime.getHours()).padStart(2,"0");
-const mm=String(currentTime.getMinutes()).padStart(2,"0");
-
-nextBroadcast.textContent=
-`${seasonData[targetIndex].title} ${m}월 ${d}일 (${dayName}) ${hh}시 ${mm}분`;
-
+  nextBroadcast.textContent=
+  `${seasonData[targetIndex].title} ${m}월 ${d}일 (${dayName}) ${hh}시 ${mm}분`;
 }
 
 /* =====================
@@ -302,39 +276,29 @@ upcoming 표시
 ===================== */
 
 function highlightUpcoming(){
+  clearUpcoming();
 
-clearUpcoming();
+  const baseDate=getBaseDate();
+  const baseIndex=parseInt(baseData.ep);
+  const now=new Date();
 
-const baseDate=getBaseDate();
-const baseIndex=parseInt(baseData.ep);
+  let currentTime=new Date(baseDate);
+  let index=baseIndex;
 
-const now=new Date();
+  while(true){
+    const nextTime=new Date(currentTime.getTime()+durations[index]*1000);
 
-let currentTime=new Date(baseDate);
-let index=baseIndex;
+    if(now<nextTime)break;
 
-while(true){
+    currentTime=nextTime;
+    index=(index+1)%seasonData.length;
+  }
 
-const nextTime=new Date(
-currentTime.getTime()+durations[index]*1000
-);
-
-if(now<nextTime)break;
-
-currentTime=nextTime;
-index=(index+1)%seasonData.length;
-
-}
-
-for(let i=0;i<6;i++){
-
-const target=(index+i)%seasonData.length;
-const btn=btnMap[target];
-
-if(btn)btn.classList.add("upcoming");
-
-}
-
+  for(let i=0;i<6;i++){
+    const target=(index+i)%seasonData.length;
+    const btn=btnMap[target];
+    if(btn)btn.classList.add("upcoming");
+  }
 }
 
 /* =====================
@@ -342,21 +306,16 @@ if(btn)btn.classList.add("upcoming");
 ===================== */
 
 copyBtn.addEventListener("click",()=>{
+  navigator.clipboard.writeText(resultArea.textContent);
+  copyBtn.textContent="복사됨";
 
-navigator.clipboard.writeText(resultArea.textContent);
-
-copyBtn.textContent="복사됨";
-
-setTimeout(()=>{
-copyBtn.textContent="복사";
-},1000);
-
+  setTimeout(()=>{
+    copyBtn.textContent="복사";
+  },1000);
 });
 
 copyNextBtn.addEventListener("click",()=>{
-
-navigator.clipboard.writeText(nextBroadcast.textContent);
-
+  navigator.clipboard.writeText(nextBroadcast.textContent);
 });
 
 /* =====================
@@ -366,19 +325,43 @@ navigator.clipboard.writeText(nextBroadcast.textContent);
 clockMode.addEventListener("change",refreshAll);
 outputOrder.addEventListener("change",refreshAll);
 
+channelRadios.forEach(radio => {
+  radio.addEventListener("change", async (e) => {
+    selectedChannel = e.target.value;
+    localStorage.setItem(CHANNEL_KEY, selectedChannel);
+    await rebuildForChannel();
+  });
+});
+
 /* =====================
 새로고침
 ===================== */
 
 function refreshAll(){
+  if(!baseData || seasonData.length===0) return;
 
-highlightUpcoming();
+  highlightUpcoming();
 
-if(activeIndex===null) return;
+  if(activeIndex===null) return;
 
-generateSchedule(activeIndex);
-showNextBroadcast(activeIndex);
+  generateSchedule(activeIndex);
+  showNextBroadcast(activeIndex);
+}
 
+async function rebuildForChannel(){
+  await loadChannelData(selectedChannel);
+  renderSeasonButtons();
+
+  if(!baseData || seasonData.length===0) return;
+
+  activeIndex=getCurrentIndex();
+
+  clearActive();
+  if(btnMap[activeIndex]){
+    btnMap[activeIndex].classList.add("active");
+  }
+
+  refreshAll();
 }
 
 /* =====================
@@ -386,16 +369,9 @@ showNextBroadcast(activeIndex);
 ===================== */
 
 async function init(){
-
-baseData=await loadBaseCloud();
-
-activeIndex=getCurrentIndex();
-
-clearActive();
-btnMap[activeIndex].classList.add("active");
-
-refreshAll();
-
+  syncChannelUI();
+  baseData=await loadBaseCloud();
+  await rebuildForChannel();
 }
 
 init();

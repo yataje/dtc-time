@@ -1,33 +1,36 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+
+
 
 const firebaseConfig = {
-  apiKey: "xxxxx",
-  authDomain: "xxxxx",
-  projectId: "xxxxx",
-  storageBucket: "xxxxx",
-  messagingSenderId: "xxxxx",
-  appId: "xxxxx"
-};
+    apiKey: "AIzaSyA-GCaPNmnX8sG5F2nrp5pstE-h5I11cVI",
+    authDomain: "dtc-time.firebaseapp.com",
+    projectId: "dtc-time",
+    storageBucket: "dtc-time.firebasestorage.app",
+    messagingSenderId: "942603970945",
+    appId: "1:942603970945:web:2a2c0ad2c4b999bb17e080",
+    measurementId: "G-FMZCLM4FJP"
+  };
+  
 
-const app = initializeApp(firebaseConfig);
 
-// 핵심 수정
-const db = getDatabase(app, "https://dtc-time-default-rtdb.firebaseio.com");
-
-export async function loadBaseCloud(){
-
-  const snapshot = await get(ref(db,"dtc/base"));
-
-  if(snapshot.exists()){
-    return snapshot.val();
-  }
-
-  return null;
-}
+  const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export async function saveBaseCloud(data){
-
-  await set(ref(db,"dtc/base"),data);
-
+  await setDoc(doc(db, "sync", "base"), data);
 }
+
+export async function loadBaseCloud(){
+  const snap = await getDoc(doc(db, "sync", "base"));
+  return snap.exists() ? snap.data() : null;
+}
+
